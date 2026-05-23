@@ -2,9 +2,14 @@ module main;
 
 import lib/window/main window;
 import lib/physics/main physics;
+import lib/std/core;
+import lib/std/strings;
 
-fn VIEW_WIDTH() -> i32 { return 960; }
-fn VIEW_HEIGHT() -> i32 { return 640; }
+let view_width: i32 = 960;
+let view_height: i32 = 640;
+
+fn VIEW_WIDTH() -> i32 { return view_width; }
+fn VIEW_HEIGHT() -> i32 { return view_height; }
 fn WORLD_WIDTH() -> i32 { return 3400; }
 fn WORLD_HEIGHT() -> i32 { return 900; }
 fn PLAYER_WIDTH() -> i32 { return 32; }
@@ -92,6 +97,16 @@ let frame_index: i32 = 0;
 let game_mode: i32 = 0;
 let app_running: i32 = 1;
 
+fn update_view_size(fd: i32) -> void {
+    let size: str = window.wm_size(fd);
+    let sep: i32 = str_find(size, "x");
+    if (sep < 0) { return; }
+    let w: i32 = str_to_i32(substr_len(size, 0, sep));
+    let h: i32 = str_to_i32(substr(size, sep + 1));
+    if (w >= 320) { view_width = w; }
+    if (h >= 240) { view_height = h; }
+}
+
 fn reset_player() -> void {
     player_x = 80;
     player_y = 640;
@@ -116,6 +131,12 @@ fn update_camera() -> void {
     if (camera_x > WORLD_WIDTH() - VIEW_WIDTH()) {
         camera_x = WORLD_WIDTH() - VIEW_WIDTH();
     }
+}
+
+fn camera_y() -> i32 {
+    let y: i32 = WORLD_HEIGHT() - VIEW_HEIGHT();
+    if (y < 0) { return 0; }
+    return y;
 }
 
 fn lose_life() -> void {
@@ -210,6 +231,7 @@ fn update_game(input_mask: i32) -> void {
 
 fn draw_world(fd: i32) -> void {
     let mountain_base: i32 = VIEW_HEIGHT() - 230;
+    let cam_y: i32 = camera_y();
     window.wm_rect(fd, 0, mountain_base, VIEW_WIDTH(), 230, COLOR_MOUNTAIN());
     window.wm_rect(fd, 120 - (camera_x / 6), mountain_base - 80, 260, 80, COLOR_CLOUD());
     window.wm_rect(fd, 380 - (camera_x / 5), mountain_base - 120, 220, 70, COLOR_CLOUD());
@@ -218,7 +240,7 @@ fn draw_world(fd: i32) -> void {
     let i: i32 = 0;
     while (i < NUM_PLATFORMS()) {
         let plat_x: i32 = platform_x(i) - camera_x;
-        let plat_y: i32 = platform_y(i);
+        let plat_y: i32 = platform_y(i) - cam_y;
         let plat_w: i32 = platform_w(i);
         let plat_h: i32 = platform_h(i);
         if (plat_x + plat_w >= 0 && plat_x <= VIEW_WIDTH()) {
@@ -233,12 +255,14 @@ fn draw_world(fd: i32) -> void {
     }
 
     let flag_x: i32 = GOAL_X() - camera_x;
-    window.wm_rect(fd, flag_x + 10, GOAL_Y() - 80, 8, 120, COLOR_GOAL());
-    window.wm_rect(fd, flag_x + 18, GOAL_Y() - 80, 44, 28, COLOR_HUD_FILL());
+    let flag_y: i32 = GOAL_Y() - 80 - cam_y;
+    window.wm_rect(fd, flag_x + 10, flag_y, 8, 120, COLOR_GOAL());
+    window.wm_rect(fd, flag_x + 18, flag_y, 44, 28, COLOR_HUD_FILL());
 
-    window.wm_rect(fd, player_x - camera_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), COLOR_PLAYER());
-    window.wm_rect(fd, player_x - camera_x + 6, player_y + 8, 8, 8, COLOR_CLOUD());
-    window.wm_rect(fd, player_x - camera_x + 20, player_y + 8, 8, 8, COLOR_CLOUD());
+    let player_screen_y: i32 = player_y - cam_y;
+    window.wm_rect(fd, player_x - camera_x, player_screen_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), COLOR_PLAYER());
+    window.wm_rect(fd, player_x - camera_x + 6, player_screen_y + 8, 8, 8, COLOR_CLOUD());
+    window.wm_rect(fd, player_x - camera_x + 20, player_screen_y + 8, 8, 8, COLOR_CLOUD());
 }
 
 fn draw_hud(fd: i32) -> void {
@@ -279,10 +303,12 @@ fn main() -> i32 {
 
     window.wm_resize(fd, VIEW_WIDTH(), VIEW_HEIGHT());
     window.wm_show(fd);
+    update_view_size(fd);
     restart_game();
 
     while (app_running == 1) {
         let input_mask: i32 = window.wm_input(fd);
+        update_view_size(fd);
         update_game(input_mask);
         render_game(fd);
         window.wm_sleep_ms(16);
