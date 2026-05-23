@@ -229,13 +229,41 @@ fn update_game(input_mask: i32) -> void {
     update_player();
 }
 
+fn draw_rect_clipped(fd: i32, x: i32, y: i32, width: i32, height: i32, color: i32) -> void {
+    let draw_x: i32 = x;
+    let draw_y: i32 = y;
+    let draw_w: i32 = width;
+    let draw_h: i32 = height;
+
+    if (draw_w <= 0 || draw_h <= 0) { return; }
+    if (draw_x >= VIEW_WIDTH() || draw_y >= VIEW_HEIGHT()) { return; }
+    if (draw_x + draw_w <= 0 || draw_y + draw_h <= 0) { return; }
+
+    if (draw_x < 0) {
+        draw_w = draw_w + draw_x;
+        draw_x = 0;
+    }
+    if (draw_y < 0) {
+        draw_h = draw_h + draw_y;
+        draw_y = 0;
+    }
+    if (draw_x + draw_w > VIEW_WIDTH()) {
+        draw_w = VIEW_WIDTH() - draw_x;
+    }
+    if (draw_y + draw_h > VIEW_HEIGHT()) {
+        draw_h = VIEW_HEIGHT() - draw_y;
+    }
+    if (draw_w <= 0 || draw_h <= 0) { return; }
+
+    window.wm_rect(fd, draw_x, draw_y, draw_w, draw_h, color);
+}
+
 fn draw_world(fd: i32) -> void {
     let mountain_base: i32 = VIEW_HEIGHT() - 230;
     let cam_y: i32 = camera_y();
-    window.wm_rect(fd, 0, mountain_base, VIEW_WIDTH(), 230, COLOR_MOUNTAIN());
-    window.wm_rect(fd, 120 - (camera_x / 6), mountain_base - 80, 260, 80, COLOR_CLOUD());
-    window.wm_rect(fd, 380 - (camera_x / 5), mountain_base - 120, 220, 70, COLOR_CLOUD());
-    window.wm_rect(fd, 700 - (camera_x / 7), mountain_base - 60, 240, 60, COLOR_CLOUD());
+    draw_rect_clipped(fd, 120 - (camera_x / 6), mountain_base - 80, 260, 80, COLOR_CLOUD());
+    draw_rect_clipped(fd, 380 - (camera_x / 5), mountain_base - 120, 220, 70, COLOR_CLOUD());
+    draw_rect_clipped(fd, 700 - (camera_x / 7), mountain_base - 60, 240, 60, COLOR_CLOUD());
 
     let i: i32 = 0;
     while (i < NUM_PLATFORMS()) {
@@ -243,48 +271,46 @@ fn draw_world(fd: i32) -> void {
         let plat_y: i32 = platform_y(i) - cam_y;
         let plat_w: i32 = platform_w(i);
         let plat_h: i32 = platform_h(i);
-        if (plat_x + plat_w >= 0 && plat_x <= VIEW_WIDTH()) {
-            window.wm_rect(fd, plat_x, plat_y, plat_w, plat_h, COLOR_DIRT());
-            if (plat_h > 20) {
-                window.wm_rect(fd, plat_x, plat_y, plat_w, 20, COLOR_GRASS());
-            } else {
-                window.wm_rect(fd, plat_x, plat_y, plat_w, 8, COLOR_GRASS());
-            }
+        draw_rect_clipped(fd, plat_x, plat_y, plat_w, plat_h, COLOR_DIRT());
+        if (plat_h > 20) {
+            draw_rect_clipped(fd, plat_x, plat_y, plat_w, 20, COLOR_GRASS());
+        } else {
+            draw_rect_clipped(fd, plat_x, plat_y, plat_w, 8, COLOR_GRASS());
         }
         i = i + 1;
     }
 
     let flag_x: i32 = GOAL_X() - camera_x;
     let flag_y: i32 = GOAL_Y() - 80 - cam_y;
-    window.wm_rect(fd, flag_x + 10, flag_y, 8, 120, COLOR_GOAL());
-    window.wm_rect(fd, flag_x + 18, flag_y, 44, 28, COLOR_HUD_FILL());
+    draw_rect_clipped(fd, flag_x + 10, flag_y, 8, 120, COLOR_GOAL());
+    draw_rect_clipped(fd, flag_x + 18, flag_y, 44, 28, COLOR_HUD_FILL());
 
     let player_screen_y: i32 = player_y - cam_y;
-    window.wm_rect(fd, player_x - camera_x, player_screen_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), COLOR_PLAYER());
-    window.wm_rect(fd, player_x - camera_x + 6, player_screen_y + 8, 8, 8, COLOR_CLOUD());
-    window.wm_rect(fd, player_x - camera_x + 20, player_screen_y + 8, 8, 8, COLOR_CLOUD());
+    draw_rect_clipped(fd, player_x - camera_x, player_screen_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), COLOR_PLAYER());
+    draw_rect_clipped(fd, player_x - camera_x + 6, player_screen_y + 8, 8, 8, COLOR_CLOUD());
+    draw_rect_clipped(fd, player_x - camera_x + 20, player_screen_y + 8, 8, 8, COLOR_CLOUD());
 }
 
 fn draw_hud(fd: i32) -> void {
-    window.wm_rect(fd, 20, 20, 260, 24, COLOR_HUD_BG());
+    draw_rect_clipped(fd, 20, 20, 260, 24, COLOR_HUD_BG());
     let fill_width: i32 = (player_x * 252) / WORLD_WIDTH();
-    window.wm_rect(fd, 24, 24, fill_width, 16, COLOR_HUD_FILL());
+    draw_rect_clipped(fd, 24, 24, fill_width, 16, COLOR_HUD_FILL());
 
     let life_i: i32 = 0;
     while (life_i < player_lives) {
-        window.wm_rect(fd, 24 + life_i * 26, 54, 20, 20, COLOR_PLAYER());
+        draw_rect_clipped(fd, 24 + life_i * 26, 54, 20, 20, COLOR_PLAYER());
         life_i = life_i + 1;
     }
 
     if (game_mode == 1) {
-        window.wm_rect(fd, 260, 220, 440, 120, COLOR_WIN());
-        window.wm_rect(fd, 280, 240, 400, 80, COLOR_HUD_BG());
-        window.wm_rect(fd, 320, 270, 320, 20, COLOR_HUD_FILL());
+        draw_rect_clipped(fd, 260, 220, 440, 120, COLOR_WIN());
+        draw_rect_clipped(fd, 280, 240, 400, 80, COLOR_HUD_BG());
+        draw_rect_clipped(fd, 320, 270, 320, 20, COLOR_HUD_FILL());
     }
     if (game_mode == 2) {
-        window.wm_rect(fd, 260, 220, 440, 120, COLOR_LOSE());
-        window.wm_rect(fd, 280, 240, 400, 80, COLOR_HUD_BG());
-        window.wm_rect(fd, 320, 270, 320, 20, COLOR_PLAYER());
+        draw_rect_clipped(fd, 260, 220, 440, 120, COLOR_LOSE());
+        draw_rect_clipped(fd, 280, 240, 400, 80, COLOR_HUD_BG());
+        draw_rect_clipped(fd, 320, 270, 320, 20, COLOR_PLAYER());
     }
 }
 
