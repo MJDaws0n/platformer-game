@@ -1,0 +1,8 @@
+module physics;
+
+fn aabb_check(ax: i32, ay: i32, aw: i32, ah: i32, pe: i32, pf: i32, pg: i32, ph: i32) -> i32 {
+    if (ax + aw < pe || pe + pg < ax || ay + ah < pf || pf + ph < ay) {
+        return 0;
+    }
+    return 1;
+}

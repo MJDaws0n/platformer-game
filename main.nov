@@ -1,9 +1,9 @@
 module main;
 
-import lib/framebuffer framebuffer;
-import lib/physics physics;
-import lib/input input;
-import lib/core core;
+import src/framebuffer framebuffer;
+import src/physics physics;
+import src/input input;
+import src/core core;
 
 fn WORLD_WIDTH() -> i32 { return 800; }
 fn WORLD_HEIGHT() -> i32 { return 600; }
@@ -27,10 +27,7 @@ let game_over: i32 = 0;
 let frame_count: i32 = 0;
 
 fn check_collision(pa: i32, pb: i32, pc: i32, pd: i32, pe: i32, pf: i32, pg: i32, ph: i32) -> i32 {
-    if (pa + pc < pe || pe + pg < pa || pb + pd < pf || pf + ph < pb) {
-        return 0;
-    }
-    return 1;
+    return physics.aabb_check(pa, pb, pc, pd, pe, pf, pg, ph);
 }
 
 fn is_grounded() -> i32 {
