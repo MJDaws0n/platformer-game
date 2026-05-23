@@ -258,6 +258,68 @@ fn draw_rect_clipped(fd: i32, x: i32, y: i32, width: i32, height: i32, color: i3
     window.wm_rect(fd, draw_x, draw_y, draw_w, draw_h, color);
 }
 
+fn draw_letter_w(fd: i32, x: i32, y: i32, scale: i32, color: i32) -> void {
+    draw_rect_clipped(fd, x, y, scale, scale * 7, color);
+    draw_rect_clipped(fd, x + scale * 4, y, scale, scale * 7, color);
+    draw_rect_clipped(fd, x + scale, y + scale * 5, scale, scale * 2, color);
+    draw_rect_clipped(fd, x + scale * 3, y + scale * 5, scale, scale * 2, color);
+    draw_rect_clipped(fd, x + scale * 2, y + scale * 6, scale, scale, color);
+}
+
+fn draw_letter_e(fd: i32, x: i32, y: i32, scale: i32, color: i32) -> void {
+    draw_rect_clipped(fd, x, y, scale, scale * 7, color);
+    draw_rect_clipped(fd, x, y, scale * 5, scale, color);
+    draw_rect_clipped(fd, x, y + scale * 3, scale * 4, scale, color);
+    draw_rect_clipped(fd, x, y + scale * 6, scale * 5, scale, color);
+}
+
+fn draw_letter_l(fd: i32, x: i32, y: i32, scale: i32, color: i32) -> void {
+    draw_rect_clipped(fd, x, y, scale, scale * 7, color);
+    draw_rect_clipped(fd, x, y + scale * 6, scale * 5, scale, color);
+}
+
+fn draw_letter_d(fd: i32, x: i32, y: i32, scale: i32, color: i32) -> void {
+    draw_rect_clipped(fd, x, y, scale, scale * 7, color);
+    draw_rect_clipped(fd, x, y, scale * 4, scale, color);
+    draw_rect_clipped(fd, x, y + scale * 6, scale * 4, scale, color);
+    draw_rect_clipped(fd, x + scale * 4, y + scale, scale, scale * 5, color);
+}
+
+fn draw_letter_o(fd: i32, x: i32, y: i32, scale: i32, color: i32) -> void {
+    draw_rect_clipped(fd, x, y, scale * 5, scale, color);
+    draw_rect_clipped(fd, x, y + scale * 6, scale * 5, scale, color);
+    draw_rect_clipped(fd, x, y + scale, scale, scale * 5, color);
+    draw_rect_clipped(fd, x + scale * 4, y + scale, scale, scale * 5, color);
+}
+
+fn draw_letter_n(fd: i32, x: i32, y: i32, scale: i32, color: i32) -> void {
+    draw_rect_clipped(fd, x, y, scale, scale * 7, color);
+    draw_rect_clipped(fd, x + scale * 4, y, scale, scale * 7, color);
+    draw_rect_clipped(fd, x + scale, y + scale, scale, scale, color);
+    draw_rect_clipped(fd, x + scale * 2, y + scale * 2, scale, scale, color);
+    draw_rect_clipped(fd, x + scale * 3, y + scale * 3, scale, scale, color);
+}
+
+fn draw_letter_message(fd: i32, letter: str, x: i32, y: i32, scale: i32, color: i32) -> void {
+    if (letter == "W") { draw_letter_w(fd, x, y, scale, color); return; }
+    if (letter == "E") { draw_letter_e(fd, x, y, scale, color); return; }
+    if (letter == "L") { draw_letter_l(fd, x, y, scale, color); return; }
+    if (letter == "D") { draw_letter_d(fd, x, y, scale, color); return; }
+    if (letter == "O") { draw_letter_o(fd, x, y, scale, color); return; }
+    if (letter == "N") { draw_letter_n(fd, x, y, scale, color); return; }
+}
+
+fn draw_well_done(fd: i32, x: i32, y: i32, scale: i32, color: i32) -> void {
+    draw_letter_message(fd, "W", x, y, scale, color);
+    draw_letter_message(fd, "E", x + scale * 6, y, scale, color);
+    draw_letter_message(fd, "L", x + scale * 12, y, scale, color);
+    draw_letter_message(fd, "L", x + scale * 18, y, scale, color);
+    draw_letter_message(fd, "D", x + scale * 27, y, scale, color);
+    draw_letter_message(fd, "O", x + scale * 33, y, scale, color);
+    draw_letter_message(fd, "N", x + scale * 39, y, scale, color);
+    draw_letter_message(fd, "E", x + scale * 45, y, scale, color);
+}
+
 fn draw_world(fd: i32) -> void {
     let mountain_base: i32 = VIEW_HEIGHT() - 230;
     let cam_y: i32 = camera_y();
@@ -282,7 +344,7 @@ fn draw_world(fd: i32) -> void {
 
     let flag_x: i32 = GOAL_X() - camera_x;
     let flag_y: i32 = GOAL_Y() - 80 - cam_y;
-    draw_rect_clipped(fd, flag_x + 10, flag_y, 8, 120, COLOR_GOAL());
+    draw_rect_clipped(fd, flag_x + 10, flag_y, 8, 80, COLOR_GOAL());
     draw_rect_clipped(fd, flag_x + 18, flag_y, 44, 28, COLOR_HUD_FILL());
 
     let player_screen_y: i32 = player_y - cam_y;
@@ -303,9 +365,10 @@ fn draw_hud(fd: i32) -> void {
     }
 
     if (game_mode == 1) {
-        draw_rect_clipped(fd, 260, 220, 440, 120, COLOR_WIN());
-        draw_rect_clipped(fd, 280, 240, 400, 80, COLOR_HUD_BG());
-        draw_rect_clipped(fd, 320, 270, 320, 20, COLOR_HUD_FILL());
+        draw_rect_clipped(fd, 250, 205, 460, 140, COLOR_WIN());
+        draw_rect_clipped(fd, 262, 217, 436, 116, COLOR_HUD_BG());
+        draw_well_done(fd, 320, 245, 6, COLOR_HUD_FILL());
+        draw_rect_clipped(fd, 370, 300, 220, 8, COLOR_CLOUD());
     }
     if (game_mode == 2) {
         draw_rect_clipped(fd, 260, 220, 440, 120, COLOR_LOSE());
