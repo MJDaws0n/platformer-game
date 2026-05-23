@@ -10,15 +10,51 @@ fn PLAYER_WIDTH() -> i32 { return 16; }
 fn PLAYER_HEIGHT() -> i32 { return 24; }
 fn NUM_PLATFORMS() -> i32 { return 9; }
 
+fn platform_x(index: i32) -> i32 {
+    if (index == 0) { return 0; }
+    if (index == 1) { return 100; }
+    if (index == 2) { return 350; }
+    if (index == 3) { return 600; }
+    if (index == 4) { return 50; }
+    if (index == 5) { return 400; }
+    if (index == 6) { return 650; }
+    if (index == 7) { return 200; }
+    return 500;
+}
+
+fn platform_y(index: i32) -> i32 {
+    if (index == 0) { return 550; }
+    if (index == 1) { return 450; }
+    if (index == 2) { return 400; }
+    if (index == 3) { return 450; }
+    if (index == 4) { return 300; }
+    if (index == 5) { return 250; }
+    if (index == 6) { return 320; }
+    if (index == 7) { return 150; }
+    return 100;
+}
+
+fn platform_w(index: i32) -> i32 {
+    if (index == 0) { return 800; }
+    if (index == 1) { return 150; }
+    if (index == 2) { return 150; }
+    if (index == 3) { return 150; }
+    if (index == 4) { return 120; }
+    if (index == 5) { return 150; }
+    if (index == 6) { return 120; }
+    if (index == 7) { return 120; }
+    return 150;
+}
+
+fn platform_h(index: i32) -> i32 {
+    if (index == 0) { return 50; }
+    return 20;
+}
+
 let player_x: i32 = 100;
 let player_y: i32 = 300;
 let player_vx: i32 = 0;
 let player_vy: i32 = 0;
-
-let platforms_x: []i32 = [0, 100, 350, 600, 50, 400, 650, 200, 500];
-let platforms_y: []i32 = [550, 450, 400, 450, 300, 250, 320, 150, 100];
-let platforms_w: []i32 = [800, 150, 150, 150, 120, 150, 120, 120, 150];
-let platforms_h: []i32 = [50, 20, 20, 20, 20, 20, 20, 20, 20];
 
 let game_score: i32 = 0;
 let game_lives: i32 = 3;
@@ -36,10 +72,10 @@ fn is_grounded() -> i32 {
     
     let i: i32 = 0;
     while (i < NUM_PLATFORMS()) {
-        let p_x: i32 = platforms_x[i];
-        let p_y: i32 = platforms_y[i];
-        let p_w: i32 = platforms_w[i];
-        let p_h: i32 = platforms_h[i];
+        let p_x: i32 = platform_x(i);
+        let p_y: i32 = platform_y(i);
+        let p_w: i32 = platform_w(i);
+        let p_h: i32 = platform_h(i);
         
         if (player_y + PLAYER_HEIGHT() <= p_y + 8 && player_vy >= 0) {
             if (check_collision(player_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), p_x, p_y, p_w, p_h) == 1) {
@@ -69,10 +105,10 @@ fn update_game() -> void {
     
     let i: i32 = 0;
     while (i < NUM_PLATFORMS()) {
-        let p_x: i32 = platforms_x[i];
-        let p_y: i32 = platforms_y[i];
-        let p_w: i32 = platforms_w[i];
-        let p_h: i32 = platforms_h[i];
+        let p_x: i32 = platform_x(i);
+        let p_y: i32 = platform_y(i);
+        let p_w: i32 = platform_w(i);
+        let p_h: i32 = platform_h(i);
         
         if (check_collision(player_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), p_x, p_y, p_w, p_h) == 1) {
             if (player_vy > 0) {
@@ -111,10 +147,10 @@ fn render_game() -> void {
     
     let i: i32 = 0;
     while (i < NUM_PLATFORMS()) {
-        let p_x: i32 = platforms_x[i];
-        let p_y: i32 = platforms_y[i];
-        let p_w: i32 = platforms_w[i];
-        let p_h: i32 = platforms_h[i];
+        let p_x: i32 = platform_x(i);
+        let p_y: i32 = platform_y(i);
+        let p_w: i32 = platform_w(i);
+        let p_h: i32 = platform_h(i);
         framebuffer.fb_draw_rect(p_x, p_y, p_w, p_h, 0xFF00FF00);
         i = i + 1;
     }
