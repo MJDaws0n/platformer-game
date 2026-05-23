@@ -1,201 +1,293 @@
 module main;
 
-import src/framebuffer framebuffer;
-import src/input input;
+import lib/window/main window;
 import lib/physics/main physics;
 
-fn WORLD_WIDTH() -> i32 { return 800; }
-fn WORLD_HEIGHT() -> i32 { return 600; }
-fn PLAYER_WIDTH() -> i32 { return 16; }
-fn PLAYER_HEIGHT() -> i32 { return 24; }
-fn NUM_PLATFORMS() -> i32 { return 9; }
+fn VIEW_WIDTH() -> i32 { return 960; }
+fn VIEW_HEIGHT() -> i32 { return 640; }
+fn WORLD_WIDTH() -> i32 { return 3400; }
+fn WORLD_HEIGHT() -> i32 { return 900; }
+fn PLAYER_WIDTH() -> i32 { return 32; }
+fn PLAYER_HEIGHT() -> i32 { return 48; }
+fn GOAL_X() -> i32 { return 3230; }
+fn GOAL_Y() -> i32 { return 260; }
+fn NUM_PLATFORMS() -> i32 { return 14; }
+
+fn COLOR_SKY() -> i32 { return 0xFF6EC6FF; }
+fn COLOR_MOUNTAIN() -> i32 { return 0xFF89A6D9; }
+fn COLOR_DIRT() -> i32 { return 0xFF6B4A2B; }
+fn COLOR_GRASS() -> i32 { return 0xFF58C44D; }
+fn COLOR_PLAYER() -> i32 { return 0xFFFF4B4B; }
+fn COLOR_GOAL() -> i32 { return 0xFF2B5BFF; }
+fn COLOR_CLOUD() -> i32 { return 0xFFF7FBFF; }
+fn COLOR_HUD_BG() -> i32 { return 0xFF1B2233; }
+fn COLOR_HUD_FILL() -> i32 { return 0xFFFFD447; }
+fn COLOR_WIN() -> i32 { return 0xFF3EDC81; }
+fn COLOR_LOSE() -> i32 { return 0xFFE65050; }
 
 fn platform_x(index: i32) -> i32 {
     if (index == 0) { return 0; }
-    if (index == 1) { return 100; }
-    if (index == 2) { return 350; }
-    if (index == 3) { return 600; }
-    if (index == 4) { return 50; }
-    if (index == 5) { return 400; }
-    if (index == 6) { return 650; }
-    if (index == 7) { return 200; }
-    return 500;
+    if (index == 1) { return 160; }
+    if (index == 2) { return 360; }
+    if (index == 3) { return 620; }
+    if (index == 4) { return 870; }
+    if (index == 5) { return 1120; }
+    if (index == 6) { return 1390; }
+    if (index == 7) { return 1650; }
+    if (index == 8) { return 1910; }
+    if (index == 9) { return 2160; }
+    if (index == 10) { return 2420; }
+    if (index == 11) { return 2680; }
+    if (index == 12) { return 2930; }
+    return 3140;
 }
 
 fn platform_y(index: i32) -> i32 {
-    if (index == 0) { return 550; }
-    if (index == 1) { return 450; }
-    if (index == 2) { return 400; }
-    if (index == 3) { return 450; }
-    if (index == 4) { return 300; }
-    if (index == 5) { return 250; }
-    if (index == 6) { return 320; }
-    if (index == 7) { return 150; }
-    return 100;
+    if (index == 0) { return 760; }
+    if (index == 1) { return 690; }
+    if (index == 2) { return 620; }
+    if (index == 3) { return 570; }
+    if (index == 4) { return 510; }
+    if (index == 5) { return 450; }
+    if (index == 6) { return 520; }
+    if (index == 7) { return 610; }
+    if (index == 8) { return 540; }
+    if (index == 9) { return 470; }
+    if (index == 10) { return 410; }
+    if (index == 11) { return 350; }
+    if (index == 12) { return 300; }
+    return 260;
 }
 
 fn platform_w(index: i32) -> i32 {
-    if (index == 0) { return 800; }
-    if (index == 1) { return 150; }
-    if (index == 2) { return 150; }
-    if (index == 3) { return 150; }
-    if (index == 4) { return 120; }
-    if (index == 5) { return 150; }
-    if (index == 6) { return 120; }
-    if (index == 7) { return 120; }
-    return 150;
+    if (index == 0) { return 3400; }
+    if (index == 1) { return 170; }
+    if (index == 2) { return 160; }
+    if (index == 3) { return 170; }
+    if (index == 4) { return 150; }
+    if (index == 5) { return 170; }
+    if (index == 6) { return 140; }
+    if (index == 7) { return 170; }
+    if (index == 8) { return 150; }
+    if (index == 9) { return 150; }
+    if (index == 10) { return 150; }
+    if (index == 11) { return 150; }
+    if (index == 12) { return 140; }
+    return 180;
 }
 
 fn platform_h(index: i32) -> i32 {
-    if (index == 0) { return 50; }
-    return 20;
+    if (index == 0) { return 140; }
+    return 28;
 }
 
-let player_x: i32 = 100;
-let player_y: i32 = 300;
+let player_x: i32 = 80;
+let player_y: i32 = 640;
 let player_vx: i32 = 0;
 let player_vy: i32 = 0;
+let player_grounded: i32 = 0;
+let camera_x: i32 = 0;
+let player_lives: i32 = 3;
+let frame_index: i32 = 0;
+let game_mode: i32 = 0;
+let app_running: i32 = 1;
 
-let game_score: i32 = 0;
-let game_lives: i32 = 3;
-let game_over: i32 = 0;
-let frame_count: i32 = 0;
-
-fn check_collision(pa: i32, pb: i32, pc: i32, pd: i32, pe: i32, pf: i32, pg: i32, ph: i32) -> i32 {
-    return physics.aabb_check(pa, pb, pc, pd, pe, pf, pg, ph);
+fn reset_player() -> void {
+    player_x = 80;
+    player_y = 640;
+    player_vx = 0;
+    player_vy = 0;
+    player_grounded = 0;
+    camera_x = 0;
 }
 
-fn is_grounded() -> i32 {
-    if (player_vy <= 0) {
-        return 0;
-    }
-    
-    let i: i32 = 0;
-    while (i < NUM_PLATFORMS()) {
-        let p_x: i32 = platform_x(i);
-        let p_y: i32 = platform_y(i);
-        let p_w: i32 = platform_w(i);
-        let p_h: i32 = platform_h(i);
-        
-        if (player_y + PLAYER_HEIGHT() <= p_y + 8 && player_vy >= 0) {
-            if (check_collision(player_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), p_x, p_y, p_w, p_h) == 1) {
-                return 1;
-            }
-        }
-        i = i + 1;
-    }
-    return 0;
+fn restart_game() -> void {
+    player_lives = 3;
+    game_mode = 0;
+    frame_index = 0;
+    reset_player();
 }
 
-fn apply_gravity() -> void {
-    player_vy = player_vy + 3;
-    if (player_vy > 500) {
-        player_vy = 500;
+fn update_camera() -> void {
+    camera_x = player_x - (VIEW_WIDTH() / 2) + (PLAYER_WIDTH() / 2);
+    if (camera_x < 0) {
+        camera_x = 0;
+    }
+    if (camera_x > WORLD_WIDTH() - VIEW_WIDTH()) {
+        camera_x = WORLD_WIDTH() - VIEW_WIDTH();
     }
 }
 
-fn update_game() -> void {
-    frame_count = frame_count + 1;
-    
-    input.input_update();
-    apply_gravity();
-    
-    player_x = player_x + (player_vx / 100);
-    player_y = player_y + (player_vy / 100);
-    
-    let i: i32 = 0;
-    while (i < NUM_PLATFORMS()) {
-        let p_x: i32 = platform_x(i);
-        let p_y: i32 = platform_y(i);
-        let p_w: i32 = platform_w(i);
-        let p_h: i32 = platform_h(i);
-        
-        if (check_collision(player_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), p_x, p_y, p_w, p_h) == 1) {
-            if (player_vy > 0) {
-                player_y = p_y - PLAYER_HEIGHT();
-                player_vy = 0;
-            }
-        }
-        i = i + 1;
+fn lose_life() -> void {
+    player_lives = player_lives - 1;
+    if (player_lives <= 0) {
+        game_mode = 2;
+        player_lives = 0;
+    } else {
+        reset_player();
     }
-    
+}
+
+fn apply_input(input_mask: i32) -> void {
+    player_vx = 0;
+    if ((input_mask & window.wm_input_left()) != 0) {
+        player_vx = 0 - 7;
+    }
+    if ((input_mask & window.wm_input_right()) != 0) {
+        player_vx = 7;
+    }
+    if ((input_mask & window.wm_input_jump()) != 0 && player_grounded == 1) {
+        player_vy = 0 - 18;
+        player_grounded = 0;
+    }
+}
+
+fn update_player() -> void {
+    let previous_y: i32 = player_y;
+    player_vy = player_vy + 1;
+    if (player_vy > 20) {
+        player_vy = 20;
+    }
+
+    player_x = player_x + player_vx;
     if (player_x < 0) {
         player_x = 0;
     }
-    if (player_x + PLAYER_WIDTH() > WORLD_WIDTH()) {
+    if (player_x > WORLD_WIDTH() - PLAYER_WIDTH()) {
         player_x = WORLD_WIDTH() - PLAYER_WIDTH();
     }
-    if (player_y < 0) {
-        player_y = 0;
-    }
-    if (player_y > WORLD_HEIGHT()) {
-        game_lives = game_lives - 1;
-        if (game_lives <= 0) {
-            game_over = 1;
-        } else {
-            player_x = 100;
-            player_y = 300;
-            player_vy = 0;
-        }
-    }
-    
-    game_score = game_score + 1;
-}
 
-fn render_game() -> void {
-    framebuffer.fb_clear(0xFF000000);
-    
+    player_y = player_y + player_vy;
+    player_grounded = 0;
+
     let i: i32 = 0;
     while (i < NUM_PLATFORMS()) {
-        let p_x: i32 = platform_x(i);
-        let p_y: i32 = platform_y(i);
-        let p_w: i32 = platform_w(i);
-        let p_h: i32 = platform_h(i);
-        framebuffer.fb_draw_rect(p_x, p_y, p_w, p_h, 0xFF00FF00);
+        let plat_x: i32 = platform_x(i);
+        let plat_y: i32 = platform_y(i);
+        let plat_w: i32 = platform_w(i);
+        let plat_h: i32 = platform_h(i);
+
+        if (physics.aabb_check(player_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), plat_x, plat_y, plat_w, plat_h) == 1) {
+            if (player_vy >= 0 && previous_y + PLAYER_HEIGHT() <= plat_y + 14) {
+                player_y = plat_y - PLAYER_HEIGHT();
+                player_vy = 0;
+                player_grounded = 1;
+            }
+        }
         i = i + 1;
     }
-    
-    framebuffer.fb_draw_rect(player_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), 0xFFFF0000);
-    
-    let life_i: i32 = 0;
-    while (life_i < game_lives) {
-        framebuffer.fb_draw_rect(10 + life_i * 20, 10, 16, 16, 0xFFFFFF00);
-        life_i = life_i + 1;
+
+    if (player_y > WORLD_HEIGHT()) {
+        lose_life();
+        return;
     }
-    
-    framebuffer.fb_flush();
+
+    if (physics.aabb_check(player_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), GOAL_X(), GOAL_Y(), 60, 120) == 1) {
+        game_mode = 1;
+    }
+
+    update_camera();
 }
 
-fn test_game_logic() -> void {
-    let frame: i32 = 0;
-    
-    while (frame < 100) {
-        update_game();
-        frame = frame + 1;
+fn update_game(input_mask: i32) -> void {
+    frame_index = frame_index + 1;
+
+    if ((input_mask & window.wm_input_quit()) != 0) {
+        app_running = 0;
+        return;
     }
+
+    if (game_mode != 0) {
+        if ((input_mask & window.wm_input_jump()) != 0) {
+            restart_game();
+        }
+        return;
+    }
+
+    apply_input(input_mask);
+    update_player();
+}
+
+fn draw_world(fd: i32) -> void {
+    let mountain_base: i32 = VIEW_HEIGHT() - 230;
+    window.wm_rect(fd, 0, mountain_base, VIEW_WIDTH(), 230, COLOR_MOUNTAIN());
+    window.wm_rect(fd, 120 - (camera_x / 6), mountain_base - 80, 260, 80, COLOR_CLOUD());
+    window.wm_rect(fd, 380 - (camera_x / 5), mountain_base - 120, 220, 70, COLOR_CLOUD());
+    window.wm_rect(fd, 700 - (camera_x / 7), mountain_base - 60, 240, 60, COLOR_CLOUD());
+
+    let i: i32 = 0;
+    while (i < NUM_PLATFORMS()) {
+        let plat_x: i32 = platform_x(i) - camera_x;
+        let plat_y: i32 = platform_y(i);
+        let plat_w: i32 = platform_w(i);
+        let plat_h: i32 = platform_h(i);
+        if (plat_x + plat_w >= 0 && plat_x <= VIEW_WIDTH()) {
+            window.wm_rect(fd, plat_x, plat_y, plat_w, plat_h, COLOR_DIRT());
+            if (plat_h > 20) {
+                window.wm_rect(fd, plat_x, plat_y, plat_w, 20, COLOR_GRASS());
+            } else {
+                window.wm_rect(fd, plat_x, plat_y, plat_w, 8, COLOR_GRASS());
+            }
+        }
+        i = i + 1;
+    }
+
+    let flag_x: i32 = GOAL_X() - camera_x;
+    window.wm_rect(fd, flag_x + 10, GOAL_Y() - 80, 8, 120, COLOR_GOAL());
+    window.wm_rect(fd, flag_x + 18, GOAL_Y() - 80, 44, 28, COLOR_HUD_FILL());
+
+    window.wm_rect(fd, player_x - camera_x, player_y, PLAYER_WIDTH(), PLAYER_HEIGHT(), COLOR_PLAYER());
+    window.wm_rect(fd, player_x - camera_x + 6, player_y + 8, 8, 8, COLOR_CLOUD());
+    window.wm_rect(fd, player_x - camera_x + 20, player_y + 8, 8, 8, COLOR_CLOUD());
+}
+
+fn draw_hud(fd: i32) -> void {
+    window.wm_rect(fd, 20, 20, 260, 24, COLOR_HUD_BG());
+    let fill_width: i32 = (player_x * 252) / WORLD_WIDTH();
+    window.wm_rect(fd, 24, 24, fill_width, 16, COLOR_HUD_FILL());
+
+    let life_i: i32 = 0;
+    while (life_i < player_lives) {
+        window.wm_rect(fd, 24 + life_i * 26, 54, 20, 20, COLOR_PLAYER());
+        life_i = life_i + 1;
+    }
+
+    if (game_mode == 1) {
+        window.wm_rect(fd, 260, 220, 440, 120, COLOR_WIN());
+        window.wm_rect(fd, 280, 240, 400, 80, COLOR_HUD_BG());
+        window.wm_rect(fd, 320, 270, 320, 20, COLOR_HUD_FILL());
+    }
+    if (game_mode == 2) {
+        window.wm_rect(fd, 260, 220, 440, 120, COLOR_LOSE());
+        window.wm_rect(fd, 280, 240, 400, 80, COLOR_HUD_BG());
+        window.wm_rect(fd, 320, 270, 320, 20, COLOR_PLAYER());
+    }
+}
+
+fn render_game(fd: i32) -> void {
+    window.wm_clear(fd, COLOR_SKY());
+    draw_world(fd);
+    draw_hud(fd);
+    window.wm_present(fd);
 }
 
 fn main() -> i32 {
-    let fb_result: i32 = framebuffer.fb_open();
-    
-    if (fb_result >= 0) {
-        let frame: i32 = 0;
-        let max_frames: i32 = 300;
-        
-        while (frame < max_frames && game_over == 0) {
-            update_game();
-            render_game();
-            frame = frame + 1;
-        }
-        
-        framebuffer.fb_close();
-        
-        if (game_over == 1) {
-            return 1;
-        }
-        return 0;
-    } else {
-        test_game_logic();
-        return 0;
+    let fd: i32 = window.wm_open_default("Novus Platformer");
+    if (fd < 0) {
+        return 1;
     }
+
+    window.wm_resize(fd, VIEW_WIDTH(), VIEW_HEIGHT());
+    window.wm_show(fd);
+    restart_game();
+
+    while (app_running == 1) {
+        let input_mask: i32 = window.wm_input(fd);
+        update_game(input_mask);
+        render_game(fd);
+        window.wm_sleep_ms(16);
+    }
+
+    window.wm_quit(fd);
+    return 0;
 }
