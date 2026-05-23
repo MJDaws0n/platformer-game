@@ -1,9 +1,8 @@
 module main;
 
 import src/framebuffer framebuffer;
-import src/physics physics;
 import src/input input;
-import src/core core;
+import lib/physics/main physics;
 
 fn WORLD_WIDTH() -> i32 { return 800; }
 fn WORLD_HEIGHT() -> i32 { return 600; }
